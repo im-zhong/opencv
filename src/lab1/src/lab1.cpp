@@ -10,6 +10,8 @@
 #include <iostream>
 #include <string>
 
+class MyClass {};
+
 using namespace cv;
 
 void convertToGray(const Mat& img, Mat& gray_img) {
