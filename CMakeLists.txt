@@ -6,5 +6,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED on)
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
 find_package(OpenCV REQUIRED)
+find_package(doctest REQUIRED)
 
 add_subdirectory(src)

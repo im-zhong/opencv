@@ -22,7 +22,9 @@ class opencvRecipe(ConanFile):
     exports_sources = "CMakeLists.txt", "src/*"
 
     def requirements(self):
-        pass
+        # https://docs.conan.io/2/tutorial/versioning/version_ranges.html
+        # https://conan.io/center/recipes/doctest?version=2.4.11
+        self.requires("doctest/[^2.4]")
 
     def layout(self):
         cmake_layout(self)
