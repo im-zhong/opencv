@@ -2,6 +2,12 @@
 // lab4
 // 图像特征提取
 
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <cassert>
+#include <cmath>
+#include <doctest/doctest.h>
+#include <fstream>
+#include <iostream>
 #include <limits>
 #include <opencv2/core.hpp>
 #include <opencv2/core/mat.hpp>
@@ -10,11 +16,6 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
-
-#include <cassert>
-#include <cmath>
-#include <fstream>
-#include <iostream>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -202,7 +203,7 @@ void MyBinarize(const Mat& src, Mat& dest) {
     }
 }
 
-int main_back(int argc, char* argv[]) {
+TEST_CASE("lab4") {
     // 读取图片
     const char* filename = "/home/zhangzhong/src/opencv/imgs/orange_split.bmp";
     Mat img = imread(filename, IMREAD_GRAYSCALE);
@@ -213,14 +214,14 @@ int main_back(int argc, char* argv[]) {
     MyBinarize(img, img);
 
     // 输出图片的灰度值
-    std::ofstream fout;
-    fout.open("gray.txt");
-    for (int i = 0; i < img.rows; i++) {
-        for (int j = 0; j < img.cols; j++) {
-            fout << int(img.at<uchar>(i, j)) << " ";
-        }
-        fout << std::endl;
-    }
+    // std::ofstream fout;
+    // fout.open("gray.txt");
+    // for (int i = 0; i < img.rows; i++) {
+    //     for (int j = 0; j < img.cols; j++) {
+    //         fout << int(img.at<uchar>(i, j)) << " ";
+    //     }
+    //     fout << std::endl;
+    // }
 
     // 输出图片的面积
     double area = MyArea(img);
@@ -249,8 +250,6 @@ int main_back(int argc, char* argv[]) {
     // 输出图片的最小长宽比
     result = MyMinAspectRatio(img);
     std::cout << "minimum aspect ratio: " << result.ratio << std::endl;
-
-    return 0;
 }
 
 const char* winname = "rotate";
@@ -290,11 +289,9 @@ void MyRotateDemo(int, void*) {
 }
 
 // 看一下旋转图片的效果
-int main(int argc, char* argv[]) {
-
+TEST_CASE("lab4 rotate demo") {
     cv::namedWindow(winname);
     cv::createTrackbar("angle", winname, &angle, 90, MyRotateDemo);
     MyRotateDemo(0, 0);
     waitKey();
-    return 0;
 }
