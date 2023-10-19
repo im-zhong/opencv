@@ -1,10 +1,5 @@
-project(lab1)
-
-# static lab1 library
-add_executable(lab1
-    src/lab1.cpp
+add_executable(test_lab1 lab1.cpp)
+target_link_libraries(test_lab1 
+    PRIVATE ${OpenCV_LIBS}
+    PRIVATE doctest::doctest
 )
-target_include_directories(lab1 
-    PUBLIC include
-)
-target_link_libraries(lab1 ${OpenCV_LIBS})

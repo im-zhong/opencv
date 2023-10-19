@@ -36,6 +36,5 @@
 build/
 .cache/
 *.json
-*.jpg
 
 venv/
