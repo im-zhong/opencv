@@ -2,6 +2,7 @@
 // zhangzhong
 // canny edge detection
 
+#include <fstream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/opencv.hpp>
@@ -345,6 +346,117 @@ double CalculateLoss(const Mat& edge, const Mat& ground_truth) {
     return loss;
 }
 
+// 膨胀
+Mat MyDilation(const Mat& img, const Mat& kernel) {
+    auto size = kernel.size();
+    // 必须是一个方形区域 必须是奇数
+    assert(size.width == size.height);
+    assert(size.width % 2 == 1);
+
+    size_t pad = size.width / 2;
+
+    // 不用padding了
+    // 遍历图像
+    Mat result = img.clone();
+    for (int row = pad; row < img.rows - pad; ++row) {
+        for (int col = pad; col < img.cols - pad; ++col) {
+            // 如果当前像素是255
+            // 那么将形状置为kernel的形状
+            if (img.at<uchar>(row, col) == 255) {
+                for (int i = 0; i < size.width; ++i) {
+                    for (int j = 0; j < size.height; ++j) {
+                        // 如果kernel中的像素是255
+                        // 那么将result中的像素也置为255
+                        if (kernel.at<uchar>(i, j) == 1) {
+                            result.at<uchar>(row - pad + i, col - pad + j) =
+                                255;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+// 腐蚀
+Mat MyErosion(const Mat& img, const Mat& kernel) {
+    auto size = kernel.size();
+    // 必须是一个方形区域 必须是奇数
+    assert(size.width == size.height);
+    assert(size.width % 2 == 1);
+
+    size_t pad = size.width / 2;
+
+    // 不用padding了
+    // 遍历图像
+    Mat result = img.clone();
+    for (int row = pad; row < img.rows - pad; ++row) {
+        for (int col = pad; col < img.cols - pad; ++col) {
+            // 如果当前像素是255
+            // 那么将形状置为kernel的形状
+            if (img.at<uchar>(row, col) == 255) {
+                // 图像中的点必须和kernel中的点 全部对应 才能保留下来 否则就是0
+                bool reserve = true;
+                for (int i = 0; i < size.width; ++i) {
+                    for (int j = 0; j < size.height; ++j) {
+                        // 如果kernel中的像素是255
+                        // 那么将result中的像素也置为255
+                        if (kernel.at<uchar>(i, j) == 1) {
+                            if (img.at<uchar>(row - pad + i, col - pad + j) !=
+                                255) {
+                                reserve = false;
+                            }
+                        }
+                    }
+                }
+                if (!reserve) {
+                    result.at<uchar>(row, col) = 0;
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+void MyBinarize(const Mat& src, Mat& dest) {
+    dest = src.clone();
+    for (int i = 0; i < dest.rows; i++) {
+        for (int j = 0; j < dest.cols; j++) {
+            if (dest.at<uchar>(i, j) > 128) {
+                dest.at<uchar>(i, j) = 255;
+            } else {
+                dest.at<uchar>(i, j) = 0;
+            }
+        }
+    }
+}
+
+int CalculateDiff(const Mat& img1, const Mat& img2) {
+    assert(img1.size() == img2.size());
+    assert(img1.type() == img2.type());
+    assert(img1.channels() == img2.channels());
+    assert(img1.channels() == 1);
+
+    int diff = 0;
+    for (int row = 0; row < img1.rows; ++row) {
+        for (int col = 0; col < img1.cols; ++col) {
+            // 我们要保证两张图都是二值图
+            assert(img1.at<uchar>(row, col) == 0 ||
+                   img1.at<uchar>(row, col) == 255);
+            assert(img2.at<uchar>(row, col) == 0 ||
+                   img2.at<uchar>(row, col) == 255);
+            if (img1.at<uchar>(row, col) != img2.at<uchar>(row, col)) {
+                diff += 1;
+            }
+        }
+    }
+
+    return diff;
+}
+
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         std::printf("Usage: %s <path>", argv[0]);
@@ -423,6 +535,32 @@ int main(int argc, char* argv[]) {
     EdgeConnection(strong_edge, weak_edge, edge);
     imshow("Edge", edge);
     waitKey();
+
+    // 效果不好
+    // // 腐蚀
+    // Mat dialation_kernel = (Mat_<uchar>(3, 3) << 0, 0, 0, 1, 1, 1, 0, 0, 0);
+    // Mat erosion_kernel = Mat::ones(7, 7, CV_8UC1);
+
+    // // 膨胀
+    // Mat dilated_edge = MyDilation(edge, dialation_kernel);
+    // imshow("DilatedEdge", dilated_edge);
+
+    // Mat eroded_edge = MyErosion(dilated_edge, erosion_kernel);
+    // imshow("ErodedEdge", eroded_edge);
+
+    // 计算loss
+    Mat ground_truth =
+        imread("/home/zhangzhong/src/opencv/imgs/lab2gt.png", IMREAD_GRAYSCALE);
+
+    MyBinarize(ground_truth, ground_truth);
+    std::ofstream fout("ground_truth.txt");
+    fout << ground_truth;
+    imshow("GroundTruth", ground_truth);
+    // 输出ground_truth到txt文件
+
+    waitKey();
+    int diff = CalculateDiff(edge, ground_truth);
+    std::cout << diff << std::endl;
 
     // use opencv canny detection
     // https://docs.opencv.org/4.x/da/d5c/tutorial_canny_detector.html
