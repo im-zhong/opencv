@@ -1,3 +1,9 @@
+
+// 2023/10/19
+// zhangzhong
+
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 #include <opencv2/opencv.hpp>
 #include <opencv4/opencv2/imgcodecs.hpp>
 #include <vector>
@@ -223,7 +229,8 @@ void LevelSet::EVolution() {
         // return showIMG;
     }
 }
-int main() {
+
+TEST_CASE("test levelset2") {
     Mat img = imread("/home/zhangzhong/src/opencv/imgs/orange.jpg",
                      cv::IMREAD_GRAYSCALE);
     imshow("原图", img);

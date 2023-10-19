@@ -1,27 +1,32 @@
+// 2023/10/19
+// zhangzhong
+
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/imgproc.hpp"
+#include <doctest/doctest.h>
 using namespace cv;
 using namespace std;
-int main(int argc, char** argv) {
-    const char* filename =
-        argc >= 2 ? argv[1] : "/home/zhangzhong/src/opencv/imgs/orange.jpg";
+
+TEST_CASE("test hough") {
+    const char* filename = "/home/zhangzhong/src/opencv/imgs/orange.jpg";
     // Loads an image
     Mat src = imread(samples::findFile(filename), IMREAD_COLOR);
     // Check if image is loaded fine
     if (src.empty()) {
         printf(" Error opening image\n");
         printf(" Program Arguments: [image_name -- default %s] \n", filename);
-        return EXIT_FAILURE;
+        return;
     }
     Mat gray;
     cvtColor(src, gray, COLOR_BGR2GRAY);
     medianBlur(gray, gray, 5);
     vector<Vec3f> circles;
     HoughCircles(gray, circles, HOUGH_GRADIENT, 1,
-                 gray.rows / 16, // change this value to detect circles with
-                                 // different distances to each other
-                 100, 30, 60, 93 // change the last two parameters
+                 gray.rows / 16.0, // change this value to detect circles with
+                                   // different distances to each other
+                 100, 30, 60, 93   // change the last two parameters
                  // (min_radius & max_radius) to detect larger circles
     );
     for (size_t i = 0; i < circles.size(); i++) {
@@ -35,5 +40,4 @@ int main(int argc, char** argv) {
     }
     imshow("detected circles", src);
     waitKey();
-    return EXIT_SUCCESS;
 }

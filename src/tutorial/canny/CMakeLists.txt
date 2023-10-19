@@ -1,6 +1,5 @@
-cmake_minimum_required(VERSION 3.22)
-project( canny )
-find_package( OpenCV REQUIRED )
-
-add_executable( canny canny.cpp )
-target_link_libraries( canny ${OpenCV_LIBS} )
+add_executable(test_canny canny.cpp)
+target_link_libraries(test_canny
+    PRIVATE ${OpenCV_LIBS}
+    PRIVATE doctest::doctest
+)

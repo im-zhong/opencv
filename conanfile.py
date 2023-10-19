@@ -39,9 +39,6 @@ class opencvRecipe(ConanFile):
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
-        # 我们希望你可以自动的生成 db 文件
-        # print(self.settings.build_type)
-        # 它在执行build的时候 pwd是在build文件夹里面的
         db_path = os.path.join(
             "build", str(self.settings.build_type), "compile_commands.json")
         if os.path.exists("../../compile_commands.json"):

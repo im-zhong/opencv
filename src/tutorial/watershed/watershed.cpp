@@ -1,17 +1,27 @@
+// 2023/10/19
+// zhangzhong
+
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 #include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+
 using namespace std;
 using namespace cv;
-int main(int argc, char* argv[]) {
+
+TEST_CASE("test watershed") {
     // Load the image
-    CommandLineParser parser(argc, argv, "{@input | cards.png | input image}");
-    Mat src = imread(samples::findFile(parser.get<String>("@input")));
+    // CommandLineParser parser(argc, argv, "{@input | cards.png | input
+    // image}");
+    const char* filename = "/home/zhangzhong/src/opencv/imgs/orange.jpg";
+    // Mat src = imread(samples::findFile(parser.get<String>("@input")));
+    Mat src = imread(samples::findFile(filename));
     if (src.empty()) {
         cout << "Could not open or find the image!\n" << endl;
-        cout << "Usage: " << argv[0] << " <Input image>" << endl;
-        return -1;
+        // cout << "Usage: " << argv[0] << " <Input image>" << endl;
+        return;
     }
     // Show the source image
     imshow("Source Image", src);
@@ -108,5 +118,5 @@ int main(int argc, char* argv[]) {
     // Visualize the final image
     imshow("Final Result", dst);
     waitKey();
-    return 0;
+    // return 0;
 }

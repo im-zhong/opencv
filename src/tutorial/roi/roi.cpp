@@ -2,6 +2,8 @@
 // zhangzhong
 // ROI
 
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/opencv.hpp>
@@ -12,4 +14,4 @@
 using namespace std;
 using namespace cv;
 
-int main(int argc, char* argv[]) {}
+TEST_CASE("test roi") {}

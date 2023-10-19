@@ -3,11 +3,12 @@
 // Operations with images
 // https://docs.opencv.org/4.8.0/d5/d98/tutorial_mat_operations.html
 
-#include <opencv2/opencv.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/highgui.hpp>
-
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 #include <iostream>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/opencv.hpp>
 #include <string>
 
 using namespace std;
@@ -19,7 +20,7 @@ using namespace cv;
 //         std::printf("Usage: %s <path>\n", argv[0]);
 //         return 1;
 //     }
-    
+
 //     // load an image from a file
 //     // If you read a jpg file, a 3 channel image is created by default.
 //     Mat img = imread(argv[1]);
@@ -30,7 +31,8 @@ using namespace cv;
 //     // to save an image to a file
 //     imwrite("lena_gray.jpg", img_gray);
 //     // Format of the file is determined by its extension.
-//     // Use cv::imdecode and cv::imencode to read and write an image from/to memory rather than a file.
+//     // Use cv::imdecode and cv::imencode to read and write an image from/to
+//     memory rather than a file.
 
 //     // Access pixel
 //     // channel-1
@@ -74,14 +76,15 @@ using namespace cv;
 
 //     // A 32F image need to be converted to 8U type
 //     // [min-max] -> [0-255]
-//     // https://docs.opencv.org/4.8.0/d3/d63/classcv_1_1Mat.html#adf88c60c5b4980e05bb556080916978b
+//     //
+//     https://docs.opencv.org/4.8.0/d3/d63/classcv_1_1Mat.html#adf88c60c5b4980e05bb556080916978b
 //     // m(x,y) = saturate_cast<rType>(α(∗this)(x,y) + β)
 //     // tmp = src(x, y) * alpha + beta
 //     // dst(x, y) = saturate_cast<uchar>(tmp)
 //     img.convertTo(img, CV_8UC1, 255.0/(max-min), -min*255.0/(max-min));
 // }
 
-int main(int argc, char* argv[]) {
+TEST_CASE("test images") {
     // create a image and save it
     // TIP: 如果想要初始化参数，一定要使用Scalar, 直接填0会报错
     Mat img(300, 400, CV_8UC1, Scalar(0));
@@ -102,6 +105,4 @@ int main(int argc, char* argv[]) {
     imwrite("rect.jpg", img);
 
     // 没问题，那就是我的算法写错了
-
-    return 0;
 }

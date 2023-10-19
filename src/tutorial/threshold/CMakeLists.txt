@@ -1,6 +1,5 @@
-cmake_minimum_required(VERSION 3.22)
-project(threshold)
-find_package(OpenCV REQUIRED)
-
-add_executable(threshold threshold.cpp)
-target_link_libraries(threshold ${OpenCV_LIBS})
+add_executable(test_threshold threshold.cpp)
+target_link_libraries(test_threshold 
+    PRIVATE ${OpenCV_LIBS}
+    PRIVATE doctest::doctest
+)

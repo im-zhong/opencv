@@ -2,14 +2,15 @@
 // zhangzhong
 // cv lab3
 
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <cassert>
+#include <cmath>
+#include <doctest/doctest.h>
+#include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
-
-#include <cassert>
-#include <cmath>
-#include <iostream>
 #include <string>
 
 using namespace cv;
@@ -176,9 +177,8 @@ void learn_ostu() {
     waitKey();
 }
 
-int main(int argc, char* argv[]) {
-    // learn_simple_thresholding();
-    learn_adaptive_thresholding();
-    // learn_ostu();
-    return 0;
-}
+TEST_CASE("test simple thresholding") { learn_simple_thresholding(); }
+
+TEST_CASE("test adaptive thresholding") { learn_adaptive_thresholding(); }
+
+TEST_CASE("test ostu thresholding") { learn_ostu(); }

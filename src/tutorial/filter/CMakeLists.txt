@@ -1,6 +1,5 @@
-cmake_minimum_required(VERSION 3.22)
-project( filter )
-find_package( OpenCV REQUIRED )
-
-add_executable( filter filter.cpp )
-target_link_libraries( filter ${OpenCV_LIBS} )
+add_executable(test_filter filter.cpp)
+target_link_libraries(test_filter 
+    PRIVATE ${OpenCV_LIBS}
+    PRIVATE doctest::doctest
+)

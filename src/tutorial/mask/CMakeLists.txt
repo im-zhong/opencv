@@ -1,6 +1,5 @@
-cmake_minimum_required(VERSION 3.22)
-project(mask)
-find_package(OpenCV REQUIRED)
-
-add_executable(mask mask.cpp)
-target_link_libraries(mask ${OpenCV_LIBS})
+add_executable(test_mask mask.cpp)
+target_link_libraries(test_mask 
+    PRIVATE ${OpenCV_LIBS}
+    PRIVATE doctest::doctest
+)

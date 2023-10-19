@@ -1,13 +1,18 @@
+// 2023/10/19
+// zhangzhong
+
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
+#include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
-using namespace cv;
 
-#include <iostream>
+using namespace cv;
 using namespace std;
 
-int main(void) {
+TEST_CASE("test levelset") {
     Mat cat_img =
         imread("/home/zhangzhong/src/opencv/imgs/orange.jpg", IMREAD_GRAYSCALE);
 
@@ -30,6 +35,4 @@ int main(void) {
     waitKey(0);
 
     destroyAllWindows();
-
-    return 0;
 }

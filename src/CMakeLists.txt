@@ -1,6 +1,5 @@
-add_executable(opencv main.cpp)
+add_subdirectory(tutorial)
 add_subdirectory(lab1)
 add_subdirectory(lab2)
-add_subdirectory(example)
 add_subdirectory(lab3)
 add_subdirectory(lab4)

@@ -1,6 +1,5 @@
-cmake_minimum_required(VERSION 3.22)
-project( basic )
-find_package( OpenCV REQUIRED )
-
-add_executable( basic basic.cpp )
-target_link_libraries( basic ${OpenCV_LIBS} )
+add_executable(test_basic basic.cpp)
+target_link_libraries(test_basic 
+    PRIVATE ${OpenCV_LIBS}
+    PRIVATE doctest::doctest
+)

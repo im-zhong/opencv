@@ -2,11 +2,12 @@
 // zhangzhong
 // https://docs.opencv.org/4.x/da/d5c/tutorial_canny_detector.html
 
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
+#include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/opencv.hpp>
-
-#include <iostream>
 #include <string>
 
 using namespace cv;
@@ -58,13 +59,10 @@ static void CannyThreshold(int, void*) {
     imshow(window_name, src_color);
 }
 
-int main(int argc, char* argv[]) {
+TEST_CASE("canny detector") {
     // load an image
-    if (argc != 2) {
-        std::printf("Usage: %s <path>", argv[0]);
-        return 1;
-    }
-    std::string image_path = samples::findFile(argv[1]);
+    const char* filename = "/home/zhangzhong/src/opencv/imgs/CutleryDT.png";
+    std::string image_path = samples::findFile(filename);
     src_gray = imread(image_path, IMREAD_GRAYSCALE);
 
     // The variable to be controlled by the Trackbar is lowThreshold with a
