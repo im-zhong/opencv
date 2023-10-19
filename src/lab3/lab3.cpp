@@ -2,16 +2,17 @@
 // zhangzhong
 // cv lab3
 
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <cassert>
+#include <cmath>
+#include <doctest/doctest.h>
+#include <fstream>
+#include <iostream>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
-
-#include <cassert>
-#include <cmath>
-#include <fstream>
-#include <iostream>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -359,6 +360,7 @@ MyCircle MyHoughCircles(cv::Mat image, std::vector<Vec3f>& circles,
         int max_support = 0;
         for (int r = min_radius; r < max_radius; r++) {
             int support = 0;
+            // points保存着所有的边缘点
             for (const Point& point : points) {
                 // 如果点和半径的距离差不太多，就认为支持这个半径
                 if (abs(norm(point - center) - r) < 10) {
@@ -366,6 +368,7 @@ MyCircle MyHoughCircles(cv::Mat image, std::vector<Vec3f>& circles,
                 }
             }
             if (support > max_support) {
+                // 更新最佳半径
                 radius = r;
                 max_support = support;
             }
@@ -373,6 +376,7 @@ MyCircle MyHoughCircles(cv::Mat image, std::vector<Vec3f>& circles,
         circles_.push_back(Point(center.x, center.y));
     }
 
+    // finally we find this best fit circle!!!
     MyCircle my_circle{circles_[0], radius};
 
     // draw the circle on the original image
@@ -385,19 +389,20 @@ MyCircle MyHoughCircles(cv::Mat image, std::vector<Vec3f>& circles,
     }
 
     // use the opencv houghcicle the draw it on the same image
-    circles.clear();
-    medianBlur(image, image, 5);
-    cv::HoughCircles(image, circles, HOUGH_GRADIENT, 1, image.rows / 16.0, 100,
-                     30, 60, 93);
-    for (size_t i = 0; i < circles.size(); i++) {
-        Vec3i c = circles[i];
-        Point center = Point(c[0], c[1]);
-        // circle center
-        circle(image_, center, 1, Scalar(200), 3);
-        // circle outline
-        int radius = c[2];
-        circle(image_, center, radius, Scalar(200), 3);
-    }
+    // circles.clear();
+    // medianBlur(image, image, 5);
+    // cv::HoughCircles(image, circles, HOUGH_GRADIENT, 1, image.rows / 16.0,
+    // 100,
+    //                  30, 60, 93);
+    // for (size_t i = 0; i < circles.size(); i++) {
+    //     Vec3i c = circles[i];
+    //     Point center = Point(c[0], c[1]);
+    //     // circle center
+    //     circle(image_, center, 1, Scalar(128), 3);
+    //     // circle outline
+    //     int radius = c[2];
+    //     circle(image_, center, radius, Scalar(128), 3);
+    // }
     imshow("circle on image", image_);
     // waitKey();
 
@@ -408,7 +413,7 @@ int min_radius = 60;
 int max_radius = 85;
 int canny_threshold = 40;
 int accumulator_threshold = 5;
-void MyHoughCircles(int, void*) {
+void MyHoughCirclesDemo(int, void*) {
 
     // read imgge from file, and convert it into grayscale
     const char* filename = "/home/zhangzhong/src/opencv/imgs/orange.jpg";
@@ -445,86 +450,55 @@ void GradientSlopeDemo(int, void*) {
                   canny_threshold, accumulator_threshold);
 }
 
-int main(int argc, char* argv[]) {
+TEST_CASE("lab3 gradient slope demo") {
     namedWindow("circle on image");
     createTrackbar("canny threshold", "circle on image", &canny_threshold, 255,
-                   MyHoughCircles);
+                   GradientSlopeDemo);
     createTrackbar("accumulator threshold", "circle on image",
-                   &accumulator_threshold, 10, MyHoughCircles);
+                   &accumulator_threshold, 10, GradientSlopeDemo);
     createTrackbar("min radius", "circle on image", &min_radius, 90,
-                   MyHoughCircles);
-    createTrackbar("max radius", "circle on image", &max_radius, 100,
-                   MyHoughCircles);
-    MyHoughCircles(0, 0);
+                   GradientSlopeDemo);
+    createTrackbar("max radius", "circle on image", &max_radius, 200,
+                   GradientSlopeDemo);
+    createTrackbar("edge point index", "circle on image", &edge_point_index,
+                   3000, GradientSlopeDemo);
+    GradientSlopeDemo(0, 0);
     waitKey();
-    return 0;
 }
 
-// int main(int argc, char* argv[]) {
-//     namedWindow("circle on image");
-//     createTrackbar("canny threshold", "circle on image", &canny_threshold,
-//     255,
-//                    GradientSlopeDemo);
-//     createTrackbar("accumulator threshold", "circle on image",
-//                    &accumulator_threshold, 10, GradientSlopeDemo);
-//     createTrackbar("min radius", "circle on image", &min_radius, 90,
-//                    GradientSlopeDemo);
-//     createTrackbar("max radius", "circle on image", &max_radius, 200,
-//                    GradientSlopeDemo);
-//     createTrackbar("edge point index", "circle on image", &edge_point_index,
-//                    3000, GradientSlopeDemo);
-//     GradientSlopeDemo(0, 0);
-//     waitKey();
-// }
-
-// int main(int argc, char* argv[]) {
-//     const char* filename = "/home/zhangzhong/src/opencv/imgs/orange.jpg";
-//     Mat image = imread(samples::findFile(filename), IMREAD_GRAYSCALE);
-
-//     std::vector<cv::Vec3f> circles;
-
-//     // 用tracebar调一下参数吧
-//     MyCircle my_circle = MyHoughCircles(image, circles, min_radius,
-//     max_radius,
-//                                         canny_threshold,
-//                                         accumulator_threshold);
-
-//     Mat segmentation = Mat::zeros(image.size(), CV_8U);
-//     //
-//     https://docs.opencv.org/4.x/d6/d6e/group__imgproc__draw.html#gaf10604b069374903dbd0f0488cb43670
-//     circle(segmentation, my_circle.center, my_circle.radius, Scalar(255), -1,
-//            FILLED);
-//     imwrite("segmentation.jpg", segmentation);
-
-//     // read the ground truch image
-//     const char* ground_truth_path =
-//         "/home/zhangzhong/src/opencv/imgs/orange_split.bmp";
-//     Mat ground_truth =
-//         imread(samples::findFile(ground_truth_path), IMREAD_GRAYSCALE);
-//     double jaccard = Jaccard(segmentation, ground_truth);
-//     std::cout << "Jacard: " << jaccard << std::endl;
-// }
-
 // Jacard: 0.907839
-// int main(int argc, char* argv[]) {
-//     // 看看opencv的houghcircle的jaccard是多少
-//     const char* filename = "/home/zhangzhong/src/opencv/imgs/orange.jpg";
-//     Mat image = imread(samples::findFile(filename), IMREAD_GRAYSCALE);
-//     std::vector<Vec3f> circles;
-//     medianBlur(image, image, 5);
-//     cv::HoughCircles(image, circles, HOUGH_GRADIENT, 1, image.rows / 16.0,
-//     100,
-//                      30, 60, 93);
-//     Mat segmentation = Mat::zeros(image.size(), CV_8U);
-//     MyCircle my_circle = {Point(circles[0][0], circles[0][1]),
-//                           (int)circles[0][2]};
-//     circle(segmentation, my_circle.center, my_circle.radius, Scalar(255), -1,
-//            FILLED);
-//     // read the ground truch image
-//     const char* ground_truth_path =
-//         "/home/zhangzhong/src/opencv/imgs/orange_split.bmp";
-//     Mat ground_truth =
-//         imread(samples::findFile(ground_truth_path), IMREAD_GRAYSCALE);
-//     double jaccard = Jaccard(segmentation, ground_truth);
-//     std::cout << "Jacard: " << jaccard << std::endl;
-// }
+TEST_CASE("opencv houghcircle") {
+    // 看看opencv的houghcircle的jaccard是多少
+    const char* filename = "/home/zhangzhong/src/opencv/imgs/orange.jpg";
+    Mat image = imread(samples::findFile(filename), IMREAD_GRAYSCALE);
+    std::vector<Vec3f> circles;
+    medianBlur(image, image, 5);
+    cv::HoughCircles(image, circles, HOUGH_GRADIENT, 1, image.rows / 16.0, 100,
+                     30, 60, 93);
+    Mat segmentation = Mat::zeros(image.size(), CV_8U);
+    MyCircle my_circle = {Point(circles[0][0], circles[0][1]),
+                          (int)circles[0][2]};
+    circle(segmentation, my_circle.center, my_circle.radius, Scalar(255), -1,
+           FILLED);
+    // read the ground truch image
+    const char* ground_truth_path =
+        "/home/zhangzhong/src/opencv/imgs/orange_split.bmp";
+    Mat ground_truth =
+        imread(samples::findFile(ground_truth_path), IMREAD_GRAYSCALE);
+    double jaccard = Jaccard(segmentation, ground_truth);
+    std::cout << "Jacard: " << jaccard << std::endl;
+}
+
+TEST_CASE("lab3") {
+    namedWindow("circle on image");
+    createTrackbar("canny threshold", "circle on image", &canny_threshold, 255,
+                   MyHoughCirclesDemo);
+    createTrackbar("accumulator threshold", "circle on image",
+                   &accumulator_threshold, 10, MyHoughCirclesDemo);
+    createTrackbar("min radius", "circle on image", &min_radius, 90,
+                   MyHoughCirclesDemo);
+    createTrackbar("max radius", "circle on image", &max_radius, 100,
+                   MyHoughCirclesDemo);
+    MyHoughCirclesDemo(0, 0);
+    waitKey();
+}
