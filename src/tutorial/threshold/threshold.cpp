@@ -28,7 +28,7 @@ int const max_binary_value = 255;
 int const max_adaptive_method = 1; // 0: MEAN_C, 1: GAUSSIAN_C
 
 Mat src, dst;
-const char* window_name = "Threshold Demo";
+const char* winname = "Threshold Demo";
 const char* trackbar_type = "Type: \n 0: Binary \n 1: Binary Inverted \n "
                             "2: Truncated \n 3: To Zero \n 4: To Zero "
                             "Inverted";
@@ -41,7 +41,7 @@ void threshold_demo(int, void*) {
     // 3. Threshold to Zero
     // 4. Threshold to Zero Inverted
     cv::threshold(src, dst, threshold_value, max_binary_value, threshold_type);
-    imshow(window_name, dst);
+    imshow(winname, dst);
 }
 
 // 阈值分割 thresholding
@@ -72,13 +72,13 @@ void learn_simple_thresholding() {
     }
 
     // create window
-    namedWindow(window_name, WINDOW_AUTOSIZE);
+    namedWindow(winname, WINDOW_AUTOSIZE);
 
     // create trackbar to choose type of thresholding
-    createTrackbar(trackbar_type, window_name, &threshold_type, max_type,
+    createTrackbar(trackbar_type, winname, &threshold_type, max_type,
                    threshold_demo);
     // create trackbar to choose threshold vlaue
-    createTrackbar(trackbar_value, window_name, &threshold_value, max_value,
+    createTrackbar(trackbar_value, winname, &threshold_value, max_value,
                    threshold_demo);
 
     // call the function to initialize
@@ -102,7 +102,7 @@ void adaptive_threshold_demo(int, void*) {
     // https://docs.opencv.org/4.x/d7/d1b/group__imgproc__misc.html#gaa42a3e6ef26247da787bf34030ed772c
     cv::adaptiveThreshold(src, dst, max_binary_value, adaptive_method,
                           threshold_type, real_block_size, C);
-    imshow(window_name, dst);
+    imshow(winname, dst);
 }
 
 // 效果仍然很差
@@ -131,17 +131,17 @@ void learn_adaptive_thresholding() {
     GaussianBlur(src, src, Size(5, 5), 0, 0, BORDER_DEFAULT);
 
     // create window
-    namedWindow(window_name, WINDOW_AUTOSIZE);
+    namedWindow(winname, WINDOW_AUTOSIZE);
 
     // create trackbar to choose type of adaptive method
-    createTrackbar("adaptive method", window_name, &adaptive_method,
+    createTrackbar("adaptive method", winname, &adaptive_method,
                    max_adaptive_method, adaptive_threshold_demo);
     // create trackbar to choose type of thresholding
-    createTrackbar("threshold type", window_name, &threshold_type,
+    createTrackbar("threshold type", winname, &threshold_type,
                    max_adaptive_threshold_type, adaptive_threshold_demo);
     // 这种情况下 好像我们不需要手动选择 threshold_value了
     // create trackbar to choose block size
-    createTrackbar("Block Size", window_name, &block_size, max_block_size,
+    createTrackbar("Block Size", winname, &block_size, max_block_size,
                    adaptive_threshold_demo);
 
     // call the function to initialize
@@ -172,8 +172,8 @@ void learn_ostu() {
     double ostu_thresh_val = cv::threshold(src, dst, 0, max_binary_value,
                                            THRESH_BINARY | THRESH_OTSU);
     // create window
-    namedWindow(window_name, WINDOW_AUTOSIZE);
-    imshow(window_name, dst);
+    namedWindow(winname, WINDOW_AUTOSIZE);
+    imshow(winname, dst);
     waitKey();
 }
 

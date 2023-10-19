@@ -16,17 +16,17 @@ using namespace std;
 Mat src, src_gray;
 Mat dst, detected_edges;
 
-int lowThreshold = 0;
+int low_threshold = 0;
 const int max_lowThreshold = 500;
 const int RATIO = 3;
 const int kernel_size = 3;
-const char* window_name = "Edge Map";
+const char* winname = "Edge Map";
 
 static void CannyThreshold(int, void*) {
     // First, we blur the image with a filter of kernel size 3
     blur(src_gray, detected_edges, Size(3, 3));
     // Second, we apply the OpenCV function cv::Canny
-    Canny(detected_edges, detected_edges, lowThreshold, lowThreshold * RATIO,
+    Canny(detected_edges, detected_edges, low_threshold, low_threshold * RATIO,
           kernel_size, true);
 
     // We fill a dst image with zeros (meaning the image is completely black)
@@ -56,7 +56,7 @@ static void CannyThreshold(int, void*) {
         }
     }
 
-    imshow(window_name, src_color);
+    imshow(winname, src_color);
 }
 
 TEST_CASE("canny detector") {
@@ -69,9 +69,9 @@ TEST_CASE("canny detector") {
     // limit of max_lowThreshold (which we set to 100 previously) Each time the
     // Trackbar registers an action, the callback function CannyThreshold will
     // be invoked.
-    namedWindow(window_name, WINDOW_NORMAL);
-    createTrackbar("Min Threshold:", window_name, &lowThreshold,
-                   max_lowThreshold, CannyThreshold);
+    namedWindow(winname, WINDOW_NORMAL);
+    createTrackbar("Min Threshold:", winname, &low_threshold, max_lowThreshold,
+                   CannyThreshold);
 
     CannyThreshold(0, 0);
     waitKey();

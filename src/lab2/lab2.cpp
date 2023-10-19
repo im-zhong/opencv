@@ -2,14 +2,15 @@
 // zhangzhong
 // canny edge detection
 
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <cassert>
+#include <cmath>
+#include <doctest/doctest.h>
 #include <fstream>
+#include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/opencv.hpp>
-
-#include <cassert>
-#include <cmath>
-#include <iostream>
 #include <string>
 
 using namespace cv;
@@ -133,6 +134,7 @@ void NonMaximumSuppression(const Mat& magnitude, const Mat& angle,
             // 注意一定是和原始的Magnitude比较 而不是和NMS比较
             if (curr_magnitude < max_magnitude) {
                 // TODO: 这个<float>可以去掉吗？？
+                // 抑制
                 result.at<double>(row, col) = 0;
             }
         }
@@ -149,12 +151,8 @@ void NonMaximumSuppression(const Mat& magnitude, const Mat& angle,
 void DoubleThresholdDetection(Mat& nms, double low, double high,
                               Mat& strong_edge, Mat& weak_edge) {
     // 边缘图像全部初始化为0
-    // 不行 create会 随机初始化
-    strong_edge.create(nms.size(), CV_8UC1);
-    weak_edge.create(nms.size(), CV_8UC1);
-    // 将两个图像填充为零
-    strong_edge = Scalar(0);
-    weak_edge = Scalar(0);
+    strong_edge = Mat::zeros(nms.size(), CV_8UC1);
+    weak_edge = Mat::zeros(nms.size(), CV_8UC1);
 
     for (int row = 0; row < nms.rows; ++row) {
         for (int col = 0; col < nms.cols; ++col) {
@@ -212,138 +210,6 @@ void EdgeConnection(Mat& strong_edge, Mat& weak_edge, Mat& edge) {
             }
         }
     }
-}
-
-int main_back(int argc, char* argv[]) {
-    if (argc != 2) {
-        std::printf("Usage: %s <path>", argv[0]);
-        return 1;
-    }
-
-    // TIP: 中间过程的结果尽可能是灰度图 这样非常容易检查每一步的结果 发现错误
-
-    // step 1. 目前先使用opencv自带的filter2D进行过滤吧 就不自己实现了
-    // https://stackoverflow.com/questions/20041391/why-gauss-filter-chooses-such-values
-    // 定义高斯模糊核
-    Mat guassin_kernel_5 =
-        (Mat_<double>(5, 5) << 1, 4, 7, 4, 1, 4, 16, 26, 16, 4, 7, 26, 41, 26,
-         7, 4, 16, 26, 16, 4, 1, 4, 7, 4, 1);
-    guassin_kernel_5 /= 273;
-
-    Mat gaussian_kernel_3 = (Mat_<double>(3, 3) << 1, 2, 1, 2, 4, 2, 1, 2, 1);
-    gaussian_kernel_3 /= 16;
-
-    // step 2. 读取图像
-    std::string image_path = samples::findFile(argv[1]);
-    Mat img = imread(image_path, IMREAD_GRAYSCALE);
-
-    // 咱给他转成doubel类型的矩阵
-    // 然后封装一个函数 可以从double类型转成灰度图
-    Mat img_f;
-    img.convertTo(img_f, CV_64FC1);
-    cout << "img to floating point = " << img_f << endl << endl;
-    cout << "img_f.depth() = " << img_f.depth() << endl;
-
-    if (img.empty()) {
-        std::cout << "Could not read the image: " << image_path << std::endl;
-        return 1;
-    }
-
-    // step 3. 高斯模糊
-    // 确实变模糊了
-    Mat img_gaussian;
-    filter2D(img, img_gaussian, img_f.depth(), guassin_kernel_5);
-    cout << "gaussin = " << img_gaussian << endl << endl;
-
-    // imshow("Display window", img_gaussian);
-    DrawFloatingPointImage(img_gaussian, "gaussian");
-    waitKey(0);
-
-    // step 4. 计算梯度
-    Mat sobel_x = (Mat_<double>(3, 3) << -1, 0, 1, -2, 0, 2, -1, 0, 1);
-    Mat sobel_y = (Mat_<double>(3, 3) << -1, -2, -1, 0, 0, 0, 1, 2, 1);
-
-    // 最简单的方法应该是分别得到x和y的梯度，然后再求模和方向角
-    // TODO: sobel_x和sobel_y的类型应该是double
-    // 因为如果是保存在uchar里面的话，我们是没有变化有负数的
-    // 这样就会导致梯度的方向计算错误
-    Mat img_sobel_x;
-    filter2D(img_gaussian, img_sobel_x, img.depth(), sobel_x);
-    // 输出一下梯度图像
-    imshow("Display window", img_sobel_x);
-    waitKey();
-    // 也输出一下图像的值吧
-    // 其结果是一个灰度图像
-    cout << "img_sobel_x = " << endl << " " << img_sobel_x << endl << endl;
-
-    Mat img_sobel_y;
-    filter2D(img_gaussian, img_sobel_y, img.depth(), sobel_y);
-    imshow("Display window", img_sobel_y);
-    waitKey();
-    cout << "img_sobel_y = " << endl << " " << img_sobel_y << endl << endl;
-
-    // 计算梯度的模
-    Mat img_sobel_magnitude;
-    Mat img_sobel_angle;
-    CalculateMagnitudeAndAngle(img_sobel_x, img_sobel_y, img_sobel_magnitude,
-                               img_sobel_angle);
-    // 那么讲道理 我们的总的梯度图像 也应该是一个灰度图像
-    // 也就是说我们要做 saturate_cast
-    // 这一步就错了
-    // 就是因为没有做saturate_cast
-    imshow("Display window", img_sobel_magnitude);
-    waitKey();
-
-    // step 5. 非极大值抑制
-    // TODO: 这一步的处理结果不对
-    Mat img_nms;
-    NonMaximumSuppression(img_sobel_magnitude, img_sobel_angle, img_nms);
-    imshow("Display window", img_nms);
-    waitKey();
-
-    // step 6. 双阈值检测
-    // 需要指定两个阈值
-    double low_threshold = 22;
-    double high_threshold = 44;
-    Mat strong_edge, weak_edge;
-    DoubleThresholdDetection(img_nms, low_threshold, high_threshold,
-                             strong_edge, weak_edge);
-    imshow("StrongEdge", strong_edge);
-    waitKey();
-    imshow("WeakEdge", weak_edge);
-    waitKey();
-
-    // step 7. 边缘连接
-    // TODO
-    // EdgeConnection(weak_edge, strong_edge);
-
-    // TODO: 目前来看图片的边缘检测是正确的，但是可能输出的时候多了三个通道
-    // 而不是灰度图 最后输出边缘图像 imshow("Display window", strong_edge);
-    // imwrite("imgs/strong_edge.jpg", strong_edge);
-
-    return 0;
-}
-
-// 计算我们边缘检测的图像和真正的边缘图像之间的差距loss
-double CalculateLoss(const Mat& edge, const Mat& ground_truth) {
-    // 首先 两幅图像的大小应该是一样的
-    assert(edge.size() == ground_truth.size());
-    // 然后 两幅图像的类型应该是一样的
-    assert(edge.type() == ground_truth.type());
-    // 最后 两幅图像的通道数应该是一样的
-    assert(edge.channels() == ground_truth.channels());
-
-    // 计算loss
-    double loss = 0;
-    for (int row = 0; row < edge.rows; ++row) {
-        for (int col = 0; col < edge.cols; ++col) {
-            if (edge.at<uchar>(row, col) != ground_truth.at<uchar>(row, col)) {
-                loss += 1;
-            }
-        }
-    }
-
-    return loss;
 }
 
 // 膨胀
@@ -457,120 +323,150 @@ int CalculateDiff(const Mat& img1, const Mat& img2) {
     return diff;
 }
 
-int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        std::printf("Usage: %s <path>", argv[0]);
-        return 1;
-    }
-
-    Mat gaussian_kernel = (Mat_<double>(3, 3) << 1, 2, 1, 2, 4, 2, 1, 2, 1);
-    gaussian_kernel /= 16.0;
-    cout << "gaussin kernel = " << endl
-         << " " << gaussian_kernel << endl
-         << endl;
-
-    std::string image_path = samples::findFile(argv[1]);
-    Mat img = imread(image_path, IMREAD_GRAYSCALE);
-
+void MyCanny(const Mat& img, Mat& edge, double low_threshold,
+             double high_threshold, bool verbose = false) {
+    // convert to double
     Mat img_f;
-    img.convertTo(img_f, CV_64FC1);
-    cout << "img_f.depth() = " << img_f.depth() << endl;
-    // cout << "img to floating point = " << img_f << endl << endl;
-    DrawFloatingPointImage(img_f, "test windows");
+    img.convertTo(img_f, CV_64F);
 
-    // 对图像做高斯平滑 出来的结果应该是浮点数
-    // 感觉高斯平滑没做好啊
+    // gaussian blur
+    Mat gaussian_kernel =
+        (Mat_<double>(3, 3) << 1, 2, 1, 2, 4, 2, 1, 2, 1) / 16.0;
     Mat img_gaussian;
     filter2D(img_f, img_gaussian, img_f.depth(), gaussian_kernel);
-    // 这就对了 原来是输出错了矩阵
-    cout << "gaussin = " << img_gaussian << endl << endl;
+    if (verbose) {
+        cout << "gaussin = " << img_gaussian << endl << endl;
+        cout << "img_f.depth() = " << img_f.depth() << endl;
+        cout << "img to floating point = " << img_f << endl << endl;
+        DrawFloatingPointImage(img_gaussian, "gaussian blur");
+    }
 
+    // calculate gradient
+    // 对图像做高斯平滑 出来的结果应该是浮点数
     Mat sobel_x = (Mat_<double>(3, 3) << -1, 0, 1, -2, 0, 2, -1, 0, 1);
     Mat sobel_y = (Mat_<double>(3, 3) << -1, -2, -1, 0, 0, 0, 1, 2, 1);
     Mat img_sobel_x;
-    filter2D(img_gaussian, img_sobel_x, img_gaussian.depth(), sobel_x);
-    cout << "img_sobel_x = " << endl << " " << img_sobel_x << endl << endl;
-    DrawFloatingPointImage(img_sobel_x, "img_sobel_x");
-
     Mat img_sobel_y;
+    filter2D(img_gaussian, img_sobel_x, img_gaussian.depth(), sobel_x);
     filter2D(img_gaussian, img_sobel_y, img_gaussian.depth(), sobel_y);
-    cout << "img_sobel_y = " << endl << " " << img_sobel_y << endl << endl;
-    DrawFloatingPointImage(img_sobel_y, "img_sobel_y");
+    if (verbose) {
+        cout << "img_sobel_x = " << endl << " " << img_sobel_x << endl << endl;
+        DrawFloatingPointImage(img_sobel_x, "sobel x");
+        cout << "img_sobel_y = " << endl << " " << img_sobel_y << endl << endl;
+        DrawFloatingPointImage(img_sobel_y, "sobel y");
+    }
 
-    // 计算梯度的模
+    // calculate magnitude and angle
     Mat img_sobel_magnitude;
     Mat img_sobel_angle;
     CalculateMagnitudeAndAngle(img_sobel_x, img_sobel_y, img_sobel_magnitude,
                                img_sobel_angle);
-    cout << "img_sobel_magnitude = " << endl
-         << " " << img_sobel_magnitude << endl
-         << endl;
-    DrawFloatingPointImage(img_sobel_magnitude, "img_sobel_magnitude");
+    if (verbose) {
+        cout << "img_sobel_magnitude = " << endl
+             << " " << img_sobel_magnitude << endl
+             << endl;
+        DrawFloatingPointImage(img_sobel_magnitude, "magnitude");
+        cout << "img_sobel_angle = " << endl
+             << " " << img_sobel_angle << endl
+             << endl;
+        DrawFloatingPointImage(img_sobel_angle, "angle");
+    }
 
-    cout << "img_sobel_angle = " << endl
-         << " " << img_sobel_angle << endl
-         << endl;
-    DrawFloatingPointImage(img_sobel_angle, "img_sobel_angle");
-
-    // 非极大值抑制
+    // non maximum suppression
     Mat img_nms;
     NonMaximumSuppression(img_sobel_magnitude, img_sobel_angle, img_nms);
-    cout << "img_nms = " << endl << " " << img_nms << endl << endl;
-    DrawFloatingPointImage(img_nms, "img_nms");
-    // 这次终于对了 果然是类型的问题!!!
+    if (verbose) {
+        cout << "img_nms = " << endl << " " << img_nms << endl << endl;
+        DrawFloatingPointImage(img_nms, "nms");
+    }
 
-    // 双阈值检测
-    double low_threshold = 22;
-    double high_threshold = 44;
+    // double threshold detection
     Mat strong_edge, weak_edge;
     DoubleThresholdDetection(img_nms, low_threshold, high_threshold,
                              strong_edge, weak_edge);
-    imshow("StrongEdge", strong_edge);
-    waitKey();
-    imshow("WeakEdge", weak_edge);
-    waitKey();
+    if (verbose) {
+        imshow("strong edge", strong_edge);
+        waitKey();
+        imshow("weak edge", weak_edge);
+        waitKey();
+    }
 
-    // 边缘连接
-    Mat edge;
+    // edge connection get final edge graph
     EdgeConnection(strong_edge, weak_edge, edge);
-    imshow("Edge", edge);
-    waitKey();
+    if (verbose) {
+        imshow("edge", edge);
+        waitKey();
+    }
 
     // 效果不好
-    // // 腐蚀
-    // Mat dialation_kernel = (Mat_<uchar>(3, 3) << 0, 0, 0, 1, 1, 1, 0, 0, 0);
-    // Mat erosion_kernel = Mat::ones(7, 7, CV_8UC1);
+    Mat dialation_kernel = (Mat_<uchar>(3, 3) << 1, 1, 1, 1, 1, 1, 1, 1, 1);
+    Mat erosion_kernel = Mat::ones(5, 5, CV_8UC1);
+    // 膨胀
+    Mat dilated_edge = MyDilation(edge, dialation_kernel);
+    // 腐蚀
+    Mat eroded_edge = MyErosion(dilated_edge, erosion_kernel);
+    if (verbose) {
+        imshow("DilatedEdge", dilated_edge);
+        imshow("ErodedEdge", eroded_edge);
+        waitKey();
+    }
+}
 
-    // // 膨胀
-    // Mat dilated_edge = MyDilation(edge, dialation_kernel);
-    // imshow("DilatedEdge", dilated_edge);
+int low_threshold = 60;
+const int max_low_threshold = 500;
+const int RATIO = 2;
+const char* winname = "My Canny Detector";
+static void MyCannyDemo(int, void*) {
+    const char* filename = "/home/zhangzhong/src/opencv/imgs/CutleryDT.png";
+    std::string image_path = samples::findFile(filename);
+    Mat image = imread(image_path, IMREAD_GRAYSCALE);
+    Mat edge;
+    MyCanny(image, edge, low_threshold, low_threshold * RATIO, false);
+    imshow(winname, edge);
 
-    // Mat eroded_edge = MyErosion(dilated_edge, erosion_kernel);
-    // imshow("ErodedEdge", eroded_edge);
+    Mat edge_color;
+    cvtColor(edge, edge_color, COLOR_GRAY2BGR);
 
-    // 计算loss
+    // 把ground truth也画在上面 做一个对比
     Mat ground_truth =
         imread("/home/zhangzhong/src/opencv/imgs/lab2gt.png", IMREAD_GRAYSCALE);
-
     MyBinarize(ground_truth, ground_truth);
-    std::ofstream fout("ground_truth.txt");
-    fout << ground_truth;
-    imshow("GroundTruth", ground_truth);
-    // 输出ground_truth到txt文件
+    for (int i = 0; i < ground_truth.rows; i++) {
+        for (int j = 0; j < ground_truth.cols; j++) {
+            // 将groundtruth中的边缘标记为红色
+            if (ground_truth.at<uchar>(i, j) == 255) {
+                edge_color.at<Vec3b>(i, j)[0] = 0;
+                edge_color.at<Vec3b>(i, j)[1] = 0;
+                edge_color.at<Vec3b>(i, j)[2] = 255;
+            }
+        }
+    }
+    imshow(winname, edge_color);
 
-    waitKey();
+    // calculate diff
     int diff = CalculateDiff(edge, ground_truth);
     std::cout << diff << std::endl;
+}
 
-    // use opencv canny detection
-    // https://docs.opencv.org/4.x/da/d5c/tutorial_canny_detector.html
-    // https://docs.opencv.org/4.x/da/d22/tutorial_py_canny.html
-    // https://docs.opencv.org/4.x/dd/d1a/group__imgproc__feature.html#ga04723e007ed888ddf11d9ba04e2232de
-    Mat img_canny;
-    Canny(img, img_canny, low_threshold, high_threshold, 3, true);
-    imshow("Canny", img_canny);
+TEST_CASE("lab2") {
+    namedWindow(winname, WINDOW_NORMAL);
+    createTrackbar("min threshold:", winname, &low_threshold, max_low_threshold,
+                   MyCannyDemo);
+    MyCannyDemo(0, 0);
     waitKey();
+}
 
-    // 用trackbar来调整阈值即可
-    return 0;
+TEST_CASE("lab2 verbose") {
+    double low_threshold = 100;
+    double high_threshold = 200;
+    const char* filename = "/home/zhangzhong/src/opencv/imgs/CutleryDT.png";
+    std::string image_path = samples::findFile(filename);
+    Mat image = imread(image_path, IMREAD_GRAYSCALE);
+    Mat edge;
+    MyCanny(image, edge, low_threshold, high_threshold, true);
+    Mat ground_truth =
+        imread("/home/zhangzhong/src/opencv/imgs/lab2gt.png", IMREAD_GRAYSCALE);
+    MyBinarize(ground_truth, ground_truth);
+    int diff = CalculateDiff(edge, ground_truth);
+    std::cout << diff << std::endl;
 }
